@@ -24,7 +24,7 @@ def extract_title(markdown):
     raise ValueError("no title found")
 
 
-def generate_page(from_path, template_path, dest_path):
+def generate_page(from_path, template_path, dest_path, basepath):
     from blocks import markdown_to_html_node
 
     print(f"Generating page from {from_path} to {dest_path} using {template_path}")
@@ -38,22 +38,20 @@ def generate_page(from_path, template_path, dest_path):
 
     file_content = template.replace("{{ Title }}", title)
     file_content = file_content.replace("{{ Content }}", content)
+    file_content = file_content.replace('href="/', 'href="' + basepath)
+    file_content = file_content.replace('src="/', 'src="' + basepath)
     os.makedirs(os.path.dirname(dest_path), exist_ok=True)
     with open(dest_path, "w") as file:
         file.write(file_content)
 
 
-def generate_pages_recursive(dir_path_content, template_path, dest_dir_path):
+def generate_pages_recursive(dir_path_content, template_path, dest_dir_path, basepath):
     file_paths = []
-    for root, dirs, files in os.walk(dir_path_content):
+    for root, _, files in os.walk(dir_path_content):
         for file in files:
             file_paths.append(os.path.join(root, file))
 
     for file in file_paths:
         new_file = os.path.splitext(file)[0] + ".html"
         new_file = new_file.replace(dir_path_content, dest_dir_path)
-        generate_page(
-            file,
-            template_path + "/template.html",
-            new_file,
-        )
+        generate_page(file, template_path + "/template.html", new_file, basepath)
